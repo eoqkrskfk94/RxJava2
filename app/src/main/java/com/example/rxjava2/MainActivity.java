@@ -6,53 +6,75 @@ import android.os.Bundle;
 import android.util.Log;
 
 
+import java.util.List;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivty";
 
+    private CompositeDisposable disposable = new CompositeDisposable();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Observable<Task> taskObservable = Observable
-                .fromIterable(DataSource.createTasksList())
+
+        //final Task task = new Task("walk the dog", false, 3);
+        final List<Task> tasks = DataSource.createTasksList();
+
+
+
+        Observable<Integer> taskObservable2 = Observable.range(0,500)
                 .subscribeOn(Schedulers.io())
+                .filter(new Predicate<Integer>() {
+                    @Override
+                    public boolean test(Integer integer) throws Exception {
+                        //Log.d(TAG, Thread.currentThread() + ": back:" + integer);
+                        return true;
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread());
 
-        taskObservable.subscribe(new Observer<Task>() {
+        taskObservable2.subscribe(new Observer<Integer>() {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
-                Log.d(TAG, "onSubscribe called");
 
             }
 
             @Override
-            public void onNext(@NonNull Task task) {
-                Log.d(TAG, "onNext: " + Thread.currentThread().getName());
-                Log.d(TAG, "onNext: " + task.getDescription());
-
+            public void onNext(@NonNull Integer integer) {
+                Log.d(TAG, "back:" + integer);
             }
 
             @Override
             public void onError(@NonNull Throwable e) {
-                Log.d(TAG, "onError " + e);
+
             }
 
             @Override
             public void onComplete() {
-                Log.d(TAG, "onComplete: called");
+
             }
         });
+
+        for(int i = 0; i < 500; i++) Log.d(TAG, "main: " + i);
     }
 
-
-
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        disposable.clear();
+//    }
 }
